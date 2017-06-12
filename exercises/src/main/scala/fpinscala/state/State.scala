@@ -32,29 +32,73 @@ object RNG {
 
   def nonNegativeInt(rng: RNG): (Int, RNG) = {
     var (v, rng) = rng.nextInt()
-    if v == Int.MIN_VALUE {
-      v = Int.MAX_VALUE
+    if v == Int.MinValue {
+      v = Int.MaxValue
     } else if v < 0 {
       v = -v
     }
     (v, rng)
   }
 
-  def double(rng: RNG): (Double, RNG) = ???
+  def double(rng: RNG): (Double, RNG) = {
+    val (v, rng) = rng.nextInt()
+    val v = v.toDouble() / Int.MaxValue
+    (v, rng)
+  }
+  
+  def intDouble(rng: RNG): ((Int,Double), RNG) = {
+    val (i, rng) = rng.nextInt()
+    val (d, rng) = double(rng)
+    ((i, d), rng)
+  }
 
-  def intDouble(rng: RNG): ((Int,Double), RNG) = ???
+  def doubleInt(rng: RNG): ((Double,Int), RNG) = {
+    val (d, rng) = double(rng)
+    val (i, rng) = rng.nextInt()
+    ((d, i), rng)
+  }
 
-  def doubleInt(rng: RNG): ((Double,Int), RNG) = ???
+  def double3(rng: RNG): ((Double,Double,Double), RNG) = {
+    val (d1, rng) = double(rng)
+    val (d2, rng) = double(rng)
+    val (d3, rng) = double(rng)
+    ((d1, d2, d3), rng)
+  }
 
-  def double3(rng: RNG): ((Double,Double,Double), RNG) = ???
+  def ints(count: Int)(rng: RNG): (List[Int], RNG) = {
+    def intsInner(count: Int, rng: RNG, list: List[Int]): (RNG, List[Int]) {
+      if (count == 0) {
+        (rng, list)
+      } else {
+        val (v, rng) = rng.nextInt
+        intsInner(count - 1, rng, v :: list)
+      }
+    }
+    intsInner(count, rng, List())
+  }
 
-  def ints(count: Int)(rng: RNG): (List[Int], RNG) = ???
-
-  def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
-
+  def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    rng => {
+      val (a, rng2) = ra(rng)
+      val (b, rng3) = rb(rng2)
+      (f(a, b), rng3)
+    }
+  
   def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = ???
 
   def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] = ???
+  
+  
+  // using map
+  
+  def doubleUsingMap(rng: RNG): (Double, RNG) =
+    map(rng.nextInt)(_.toDouble / Int.MaxValue)
+  
+  def intDouble(rng: RNG): ((Int,Double), RNG) =
+    map2(_.nextInt, double)((_, _))
+    
+  def 
+ 
 }
 
 case class State[S,+A](run: S => (A, S)) {
